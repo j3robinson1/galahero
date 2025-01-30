@@ -41,7 +41,7 @@ NEXT_PUBLIC_GATEWAY_API=https://api-galaswap.gala.com/galachain/api/asset/public
 
 NEXT_PUBLIC_SUPABASE_URL=<FILL WITH YOUR DB>
 NEXT_PUBLIC_SUPABASE_KEY=<FILL WITH YOUR DB KEY>
-JWT_SECRET=<FILL WITH YOUR JWT>
+JWT_SECRET=<FILL WITH YOUR JWT> 
 ```
 Replace <your project id> with your actual project ID.
 
