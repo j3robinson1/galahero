@@ -22,6 +22,8 @@ const Play = ({ song, user, metamaskClient }) => {
     const noteContainerRef = useRef(null);
     const keys = ['a', 's', 'd', 'f'];
     const [practiceMode, setPracticeMode] = useState(true); // New state for practice mode
+    const [tournamentEnded, setTournamentEnded] = useState(false);
+    const tournamentEndTime = new Date('2025-02-01T00:00:00Z');
 
     const [burnAmount, setBurnAmount] = useState(0);
     const [burnSuccess, setBurnSuccess] = useState('');
@@ -40,6 +42,18 @@ const Play = ({ song, user, metamaskClient }) => {
     const frequencyBufferRef = useRef(null);
     const SAFE_DISTANCE = 100; // Minimum distance in pixels between notes
     
+    useEffect(() => {
+        const checkTournamentStatus = setInterval(() => {
+            const now = new Date();
+            if (now >= tournamentEndTime) {
+                setTournamentEnded(true);
+                clearInterval(checkTournamentStatus);
+            }
+        }, 1000);
+
+        return () => clearInterval(checkTournamentStatus);
+    }, []);
+        
     const handleGameModeChange = (mode) => {
         setGameMode(mode);
         if (mode === 'easy') setBurnAmount(0);
@@ -812,13 +826,17 @@ const Play = ({ song, user, metamaskClient }) => {
                         Hard
                         </button>
                     </div>
-                    <button
-                        onClick={burnTokens}
-                        className="start buy-button"
-                        style={{ padding: '10px', fontSize: '22px' }}
-                    >
-                        Start Game
-                    </button>
+                    {!tournamentEnded ? (
+                        <button
+                            onClick={burnTokens}
+                            className="start buy-button"
+                            style={{ padding: '10px', fontSize: '22px' }}
+                        >
+                            Start Game
+                        </button>
+                    ) : (
+                        <p style={{ fontSize: '1.2rem', color: 'silver', marginTop: '10px' }}>No Current Active Tournament</p>
+                    )}
                     <span className="burn">
                         <svg fill="silver" height="30px" width="30px" viewBox="0 0 611.999 611.999">
                         <g>

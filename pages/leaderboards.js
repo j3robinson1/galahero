@@ -28,7 +28,7 @@ const LeaderboardPage = ({ walletAddress }) => {
     { id: 20, logo: 'mjcryptowiz-logo.png', link: 'https://www.youtube.com/@mjcryptowiz', donated: 1000, color: '#e12323' }, // Metaflora: Lime Green
     { id: 20, logo: 'c-money-logo.png', link: 'https://www.youtube.com/@C-Money37', donated: 2500, color: '#8cb2ec' }, // Metaflora: Lime Green
   ];
-
+  const [tournamentEnded, setTournamentEnded] = useState(false);
   const totalRewards = donationData.reduce((sum, sponsor) => sum + sponsor.donated, 0);
 
   useEffect(() => {
@@ -39,7 +39,8 @@ const LeaderboardPage = ({ walletAddress }) => {
 
       if (timeDiff <= 0) {
         clearInterval(timer);
-        setTimeRemaining('Leaderboard ended. Rewards being processed.');
+        setTimeRemaining('Tournament Results');
+        setTournamentEnded(true);
       } else {
         const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
@@ -173,12 +174,16 @@ const LeaderboardPage = ({ walletAddress }) => {
                         c-1.1,0-8.8,4.6-10.5,5.4l-79.1,42.8c-1.3,0.6-2.3,1.1-3.5,1.8L86,79.9c-1.3,0.7-1.9,1.2-3.4,1.9l-5,2.7c-1,0.5-1,0.7-1.8,1.1
                         c-1.1,0.7-2.3,1-3.5,1.8l-10.6,5.7c-1.4,0.7-2.1,1.3-3.4,1.9l-16.1,8.8c-0.6,0.3-0.6,0.2-1.1,0.5c-2.3,1.3-4.7,2.2-6.9,3.7
                         c-1.3,0.8-2.1,1.1-3.5,1.8l-15.5,8.6C14,119.1,14.3,118.5,13.9,119.9L13.9,119.9z"/>
-                  </svg>
-                  <span className="total-gala">{Intl.NumberFormat().format(totalRewards)}</span></h3>
-
+        </svg>
+        <span className="total-gala">{Intl.NumberFormat().format(totalRewards)}</span>
+      </h3>
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h3>Leaderboard Ends In</h3>
-        <p style={{     fontSize: '1rem', fontWeight: 'bold', width: '180px', margin: 'auto', padding: '10px 5px', background: '#bc087c', borderRadius: '7px', border: '1px solid #707070' }}>{timeRemaining}</p>
+        <h3>{tournamentEnded ? "Tournament Results" : "Leaderboard Ends In"}</h3>
+        {!tournamentEnded && (
+          <p style={{ fontSize: '1rem', fontWeight: 'bold', width: '180px', margin: 'auto', padding: '10px 5px', background: '#bc087c', borderRadius: '7px', border: '1px solid #707070' }}>
+            {timeRemaining}
+          </p>
+        )}
       </div>
       <div>
         <GlobalLeaderboard wallet={walletAddress} totalRewards={totalRewards} />
