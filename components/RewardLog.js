@@ -18,7 +18,7 @@ const RewardLog = ({ walletAddress }) => {
         const searchParam =
           walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5"
             ? "6f46d045c938d69456032bea89973429-reward"
-            : `6f46d045c938d69456032bea89973429-reward and ${walletAddress}`;
+            : `6f46d045c938d69456032bea89973429-reward and ${walletAddress.replace(/^eth\|/, "")}`;
 
         let offset = 0;
         let allRewards = [];
