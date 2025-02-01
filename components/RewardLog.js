@@ -15,61 +15,80 @@ const RewardLog = ({ walletAddress }) => {
       setError(null);
 
       try {
-        const searchParam = walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5"
-          ? "6f46d045c938d69456032bea89973429-reward"
-          : `6f46d045c938d69456032bea89973429-reward and ${walletAddress}`;
+        const searchParam =
+          walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5"
+            ? "6f46d045c938d69456032bea89973429-reward"
+            : `6f46d045c938d69456032bea89973429-reward and ${walletAddress}`;
 
-        const payload = {
-          limit: 10,
-          offset: 0,
-          search: searchParam,
-        };
+        let offset = 0;
+        let allRewards = [];
+        let shouldContinue = true;
 
-        const response = await fetch("/api/rewards", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+        while (shouldContinue) {
+          const payload = {
+            limit: 10,
+            offset,
+            search: searchParam,
+          };
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch reward logs");
+          const response = await fetch("/api/rewards", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch reward logs");
+          }
+
+          const data = await response.json();
+          const blocks = data?.data?.blocks || [];
+
+          const extractedRewards = blocks
+            .flatMap((block) =>
+              block.parsedBlock?.transactions
+                ?.filter(
+                  (transaction) =>
+                    transaction.actions?.[0]?.args &&
+                    transaction.actions[0].args[0] === "GalaChainToken:TransferToken"
+                )
+                .map((transaction) => {
+                  const rewardData = transaction.actions[0].args[1]
+                    ? JSON.parse(transaction.actions[0].args[1])
+                    : null;
+
+                  return rewardData
+                    ? {
+                        channel: block.channel,
+                        blockNumber: block.parsedBlock.blockNumber,
+                        transactionNumber: transaction.id,
+                        to: rewardData.to,
+                        quantity: parseFloat(rewardData.quantity), // Convert to number
+                        currency: rewardData.tokenInstance?.collection || "GALA",
+                        timestamp: block.parsedBlock.createdAt,
+                      }
+                    : null;
+                })
+                .filter(Boolean) // Remove null values
+            )
+            .filter(Boolean);
+
+          allRewards = [...allRewards, ...extractedRewards];
+
+          // Stop fetching if fewer than 10 items are returned
+          if (extractedRewards.length < 10) {
+            shouldContinue = false;
+          } else {
+            offset += 10; // Increase offset for next batch
+          }
         }
 
-        const data = await response.json();
-        const blocks = data?.data?.blocks || [];
-
-        const extractedRewards = blocks.flatMap((block) => {
-          return block.parsedBlock?.transactions
-            ?.filter((transaction) =>
-              transaction.actions?.[0]?.args &&
-              transaction.actions[0].args[0] === "GalaChainToken:TransferToken"
-            )
-            .map((transaction) => {
-              const rewardData = transaction.actions[0].args[1]
-                ? JSON.parse(transaction.actions[0].args[1])
-                : null;
-
-              return rewardData
-                ? {
-                    channel: block.channel,
-                    blockNumber: block.parsedBlock.blockNumber,
-                    transactionNumber: transaction.id,
-                    quantity: parseFloat(rewardData.quantity), // Convert to number
-                    currency: rewardData.tokenInstance?.collection || "GALA",
-                    timestamp: block.parsedBlock.createdAt,
-                  }
-                : null;
-            })
-            .filter(Boolean); // Remove any null values
-        })
-        .filter(Boolean);
-
-        setRewards(extractedRewards);
+        setRewards(allRewards);
 
         // Calculate total earned
-        const total = extractedRewards.reduce((sum, reward) => sum + reward.quantity, 0);
+        const total = allRewards.reduce((sum, reward) => sum + reward.quantity, 0);
         setTotalEarned(total);
       } catch (err) {
         setError(err.message);
@@ -119,13 +138,16 @@ const RewardLog = ({ walletAddress }) => {
             className="reward-log-item"
           >
             <div className="reward-logo">
-              <img src="https://cdn3d.iconscout.com/3d/premium/thumb/gala-coin-3d-icon-download-in-png-blend-fbx-gltf-file-formats--cryptocurrency-crypto-currency-digital-coins-pack-science-technology-icons-5752949.png" alt="Gala Logo" />
+              <img
+                src="https://cdn3d.iconscout.com/3d/premium/thumb/gala-coin-3d-icon-download-in-png-blend-fbx-gltf-file-formats--cryptocurrency-crypto-currency-digital-coins-pack-science-technology-icons-5752949.png"
+                alt="Gala Logo"
+              />
             </div>
             <div className="reward-info">
               <p className="reward-text">
-                You received <strong>{reward.quantity.toLocaleString()} {reward.currency}</strong>
+                You {walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5" ? `sent` : "received"} <strong>{reward.quantity.toLocaleString()} {reward.currency}</strong>
               </p>
-              <p className="reward-type">TOURNAMENT REWARD</p>
+              <p className="reward-type">{walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5" ? `To: ${reward.to}` : "TOURNAMENT REWARD"}</p>
             </div>
             <div className="reward-status">
               <p className="fulfilled">FULFILLED ✅</p>
@@ -172,6 +194,8 @@ const RewardLog = ({ walletAddress }) => {
           flex-direction: column;
           align-items: center;
           gap: 10px;
+          max-height: calc(100vh - 400px);
+          overflow-y: scroll;
         }
 
         .reward-log-item {
