@@ -15,10 +15,14 @@ const RewardLog = ({ walletAddress }) => {
       setError(null);
 
       try {
+        const searchParam = walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5"
+          ? "6f46d045c938d69456032bea89973429-reward"
+          : `6f46d045c938d69456032bea89973429-reward and ${walletAddress}`;
+
         const payload = {
           limit: 10,
           offset: 0,
-          search: `6f46d045c938d69456032bea89973429-reward and ${walletAddress}`,
+          search: searchParam,
         };
 
         const response = await fetch("/api/rewards", {
@@ -36,21 +40,31 @@ const RewardLog = ({ walletAddress }) => {
         const data = await response.json();
         const blocks = data?.data?.blocks || [];
 
-        const extractedRewards = blocks.map((block) => {
-          const transaction = block.parsedBlock?.transactions?.[0] || {};
-          const rewardData = transaction.actions?.[0]?.args?.[1] ? JSON.parse(transaction.actions[0].args[1]) : null;
-          
-          return rewardData
-            ? {
-                channel: block.channel,
-                blockNumber: block.parsedBlock.blockNumber,
-                transactionNumber: transaction.id,
-                quantity: parseFloat(rewardData.quantity), // Convert to number
-                currency: rewardData.tokenInstance.collection,
-                timestamp: block.parsedBlock.createdAt,
-              }
-            : null;
-        }).filter(Boolean);
+        const extractedRewards = blocks.flatMap((block) => {
+          return block.parsedBlock?.transactions
+            ?.filter((transaction) =>
+              transaction.actions?.[0]?.args &&
+              transaction.actions[0].args[0] === "GalaChainToken:TransferToken"
+            )
+            .map((transaction) => {
+              const rewardData = transaction.actions[0].args[1]
+                ? JSON.parse(transaction.actions[0].args[1])
+                : null;
+
+              return rewardData
+                ? {
+                    channel: block.channel,
+                    blockNumber: block.parsedBlock.blockNumber,
+                    transactionNumber: transaction.id,
+                    quantity: parseFloat(rewardData.quantity), // Convert to number
+                    currency: rewardData.tokenInstance?.collection || "GALA",
+                    timestamp: block.parsedBlock.createdAt,
+                  }
+                : null;
+            })
+            .filter(Boolean); // Remove any null values
+        })
+        .filter(Boolean);
 
         setRewards(extractedRewards);
 
