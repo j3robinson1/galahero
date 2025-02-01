@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router'; // Import useRouter from Next.js
 import Header from '../components/Header';
 import WalletConnect from '../components/WalletConnect';
+import CrowdFundingPopup from '../components/CrowdFundingPopup';
 import { Analytics } from "@vercel/analytics/react";
 import '../styles/styles.css';
 
@@ -99,6 +100,7 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <div className={`container ${isLeaderboard ? 'leaderboards' : ''}`}>
+      <CrowdFundingPopup />
       <Header />
       <WalletConnect onConnect={handleWalletConnect} />
       <Component

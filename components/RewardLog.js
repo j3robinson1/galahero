@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 const RewardLog = ({ walletAddress }) => {
   const [rewards, setRewards] = useState([]);
   const [totalEarned, setTotalEarned] = useState(0);
+  const [totalDonated, setTotalDonated] = useState(0);
   const [totalBurns, setTotalBurns] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -10,18 +11,16 @@ const RewardLog = ({ walletAddress }) => {
   useEffect(() => {
     if (!walletAddress) return;
 
-    const fetchRewards = async () => {
+    const fetchTransactions = async () => {
       setLoading(true);
       setError(null);
 
-      try {
-        const searchParam =
-          walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5"
-            ? "6f46d045c938d69456032bea89973429-reward"
-            : `6f46d045c938d69456032bea89973429-reward and ${walletAddress.replace(/^eth\|/, "")}`;
+      const rewardSearchParam = `6f46d045c938d69456032bea89973429-reward and ${walletAddress.replace(/^eth\|/, "")}`;
+      const donateSearchParam = `6f46d045c938d69456032bea89973429-donate and ${walletAddress.replace(/^eth\|/, "")}`;
 
+      const fetchType = async (searchParam) => {
         let offset = 0;
-        let allRewards = [];
+        let allTransactions = [];
         let shouldContinue = true;
 
         while (shouldContinue) {
@@ -40,13 +39,13 @@ const RewardLog = ({ walletAddress }) => {
           });
 
           if (!response.ok) {
-            throw new Error("Failed to fetch reward logs");
+            throw new Error(`Failed to fetch logs for search param: ${searchParam}`);
           }
 
           const data = await response.json();
           const blocks = data?.data?.blocks || [];
 
-          const extractedRewards = blocks
+          const extractedTransactions = blocks
             .flatMap((block) =>
               block.parsedBlock?.transactions
                 ?.filter(
@@ -55,41 +54,57 @@ const RewardLog = ({ walletAddress }) => {
                     transaction.actions[0].args[0] === "GalaChainToken:TransferToken"
                 )
                 .map((transaction) => {
-                  const rewardData = transaction.actions[0].args[1]
+                  const data = transaction.actions[0].args[1]
                     ? JSON.parse(transaction.actions[0].args[1])
                     : null;
 
-                  return rewardData
+                  return data
                     ? {
                         channel: block.channel,
                         blockNumber: block.parsedBlock.blockNumber,
                         transactionNumber: transaction.id,
-                        to: rewardData.to,
-                        quantity: parseFloat(rewardData.quantity), // Convert to number
-                        currency: rewardData.tokenInstance?.collection || "GALA",
+                        to: data.to,
+                        quantity: parseFloat(data.quantity),
+                        currency: data.tokenInstance?.collection || "GALA",
                         timestamp: block.parsedBlock.createdAt,
+                        type: searchParam.includes('donate') ? 'donate' : 'reward'
                       }
                     : null;
                 })
-                .filter(Boolean) // Remove null values
+                .filter(Boolean)
             )
             .filter(Boolean);
 
-          allRewards = [...allRewards, ...extractedRewards];
+          allTransactions = [...allTransactions, ...extractedTransactions];
 
           // Stop fetching if fewer than 10 items are returned
-          if (extractedRewards.length < 10) {
+          if (extractedTransactions.length < 10) {
             shouldContinue = false;
           } else {
             offset += 10; // Increase offset for next batch
           }
         }
+        return allTransactions;
+      };
 
-        setRewards(allRewards);
+      const calculateTotal = (transactions, type) => {
+        return transactions
+          .filter(transaction => transaction.type === type)
+          .reduce((sum, transaction) => sum + transaction.quantity, 0);
+      };
 
-        // Calculate total earned
-        const total = allRewards.reduce((sum, reward) => sum + reward.quantity, 0);
-        setTotalEarned(total);
+      try {
+        // Fetch both datasets concurrently
+        const [donations, rewards] = await Promise.all([
+          fetchType(donateSearchParam),
+          fetchType(rewardSearchParam)
+        ]);
+        const combinedTransactions = [...donations, ...rewards];
+        setRewards(combinedTransactions);
+
+        // Set totals
+        setTotalEarned(calculateTotal(rewards, 'reward'));
+        setTotalDonated(calculateTotal(donations, 'donate'));
       } catch (err) {
         setError(err.message);
       } finally {
@@ -112,7 +127,7 @@ const RewardLog = ({ walletAddress }) => {
       }
     };
 
-    fetchRewards();
+    fetchTransactions();
     fetchBurns();
   }, [walletAddress]);
 
@@ -121,10 +136,11 @@ const RewardLog = ({ walletAddress }) => {
       <div className="summary-header">
         <h4 className="summary-item">Burned: {totalBurns.toLocaleString()} GALA</h4>
         <h4 className="summary-item">Earned: {totalEarned.toLocaleString()} GALA</h4>
+        <h4 className="summary-item">Donated: {totalDonated.toLocaleString()} GALA</h4>
       </div>
 
-      <h4 className="activity-log">Rewards Log</h4>
-      {!walletAddress && <p>Please Connect Wallet</p>}
+      <h4 className="activity-log">Activity Log</h4>
+      {!walletAddress && <p>Connect Wallet to View Activity Logs</p>}
       {error && <p className="error">{error}</p>}
       {!loading && walletAddress && rewards.length === 0 && <p>No rewards found.</p>}
 
@@ -145,9 +161,10 @@ const RewardLog = ({ walletAddress }) => {
             </div>
             <div className="reward-info">
               <p className="reward-text">
-                You {walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5" ? `sent` : "received"} <strong>{reward.quantity.toLocaleString()} {reward.currency}</strong>
+                You {reward.type === 'donate' ? 'sent' : 'received'} <strong>{reward.quantity.toLocaleString()} {reward.currency}</strong>
               </p>
-              <p className="reward-type">{walletAddress === "eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5" ? `To: ${reward.to}` : "TOURNAMENT REWARD"}</p>
+              <p className="reward-type">{reward.type === 'donate' ? `Donation to: Crowd Funding Initiative` : "Tournament Reward"}
+              </p>
             </div>
             <div className="reward-status">
               <p className="fulfilled">FULFILLED ✅</p>
@@ -156,6 +173,7 @@ const RewardLog = ({ walletAddress }) => {
           </a>
         ))}
       </div>
+
 
       {loading && <p>Loading rewards...</p>}
 
@@ -194,8 +212,6 @@ const RewardLog = ({ walletAddress }) => {
           flex-direction: column;
           align-items: center;
           gap: 10px;
-          max-height: calc(100vh - 400px);
-          overflow-y: scroll;
         }
 
         .reward-log-item {
@@ -256,6 +272,12 @@ const RewardLog = ({ walletAddress }) => {
         .reward-time {
           font-size: 12px;
           color: silver;
+        }
+
+        @media only screen and (max-width: 600px) {
+          .summary-header {
+            display: block !important;
+          }
         }
       `}</style>
     </div>
