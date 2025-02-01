@@ -34,7 +34,7 @@ const TransferGala = ({ walletAddress, metamaskClient }) => {
           additionalKey: "none",
           instance: "0"
         },
-        uniqueKey: `january-2025-event-${process.env.NEXT_PUBLIC_PROJECT_ID}-${Date.now()}`
+        uniqueKey: `january-2025-event-${process.env.NEXT_PUBLIC_PROJECT_ID}-reward-${Date.now()}`
       };
 
       const signedTransferDto = await metamaskClient.sign("TransferTokens", transferTokensDto);
