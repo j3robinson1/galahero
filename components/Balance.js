@@ -58,8 +58,8 @@ const Balance = ({ walletAddress }) => {
   return (
     <div className="balance-container">
       <div className="balance-info">
-        <p>Available: {formatBalance(availableBalance)} GALA</p>
-        <p>Locked: {formatBalance(lockedBalance)} GALA</p>
+        <p>Available: {formatBalance(availableBalance)} GALA(GC)</p>
+        <p>Locked: {formatBalance(lockedBalance)} GALA(GC)</p>
         <button 
             onClick={copyToClipboard} 
             style={{
