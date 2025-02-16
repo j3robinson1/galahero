@@ -11,6 +11,7 @@ function MyApp({ Component, pageProps }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredMusicList, setFilteredMusicList] = useState([]);
   const [walletAddress, setWalletAddress] = useState('');
+  const [ethWalletAddress, setEthWalletAddress] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [metamaskClient, setMetamaskClient] = useState(null);
   const [isLeaderboard, setIsLeaderboard] = useState(false); // State for detecting the leaderboard page
@@ -92,8 +93,9 @@ function MyApp({ Component, pageProps }) {
     console.log('Selected music:', music);
   };
 
-  const handleWalletConnect = (address, connected, client) => {
-    setWalletAddress(address);
+  const handleWalletConnect = (galaAddress, ethAddress, connected, client) => {
+    setWalletAddress(galaAddress);
+    setEthWalletAddress(ethAddress);
     setIsConnected(connected);
     setMetamaskClient(client);
   };
@@ -111,6 +113,7 @@ function MyApp({ Component, pageProps }) {
         onSelectMusic={handleSelectMusic}
         isConnected={isConnected}
         walletAddress={walletAddress}
+        ethWalletAddress={ethWalletAddress}
         metamaskClient={metamaskClient}
       />
       <Analytics />

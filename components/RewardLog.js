@@ -175,15 +175,16 @@ const RewardLog = ({ walletAddress }) => {
       </div>
 
 
-      {loading && <p>Loading rewards...</p>}
+      {loading && <p style={{marginBottom: '0px', paddingBottom: '10px'}}>Loading rewards...</p>}
 
       <style jsx>{`
         .reward-log-container {
           width: 95%;
           max-width: 800px;
-          margin: 20px auto;
+          margin: 0px auto;
           color: #fff;
           text-align: center;
+          padding-bottom: 20px;
         }
 
         .summary-header {
@@ -203,7 +204,7 @@ const RewardLog = ({ walletAddress }) => {
           text-align: left;
           padding: 10px 0px;
           margin: 15px 5px;
-          border-bottom: 2px solid #333;
+          border-bottom: 2px solid #771756;
           font-weight: bold;
         }
 

@@ -31,7 +31,7 @@ const WalletConnect = ({ onConnect }) => {
         address = `eth|${address.slice(2)}`;
       }
       setWalletAddress(address);
-      onConnect(address, true, metamaskClient);
+      onConnect(address, metamaskClient.ethereumAddress, true, metamaskClient);
 
       // Automatically check registration and prompt sign if needed
       const isRegistered = await checkRegistration(address);
@@ -51,7 +51,7 @@ const WalletConnect = ({ onConnect }) => {
       if (response.data.Data && response.data.Data.alias) {
         setIsRegistered(true);
         setWalletAddress(response.data.Data.alias); // Use the alias if available
-        onConnect(response.data.Data.alias, true, metamaskClient);
+        onConnect(response.data.Data.alias, address.replace('eth|', '0x'), true, metamaskClient);
         return true;
       } else {
         setIsRegistered(false);
