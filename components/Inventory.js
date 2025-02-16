@@ -48,8 +48,12 @@ const Inventory = ({ walletAddress }) => {
       </div>
 
       {/* Loading & NFT Content */}
-      {walletAddress && loading ? (
-        <p>Loading NFTs...</p>
+      {!walletAddress ? (
+        <p style={{ textAlign: 'center', fontSize: '16px', color: '#fff' }}>
+          Connect Wallet to manage assets
+        </p>
+      ) : loading ? (
+        <p style={{ textAlign: 'center', fontSize: '16px', color: '#fff' }}>Loading NFTs...</p>
       ) : (
         <>
           {activeTab === "musicians" && aiMusicians.length === 0 && (
