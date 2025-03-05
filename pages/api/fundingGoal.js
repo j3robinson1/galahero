@@ -7,7 +7,7 @@ export default async function handler(req, res) {
         Name: "FoundersNode",
         Rarity: "Ancient",
         SignGuid: "none",
-        Version: "4.1"
+        Version: "4.2"
     };
 
     try {
