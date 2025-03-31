@@ -118,7 +118,7 @@ const DonateGala = ({ walletAddress, metamaskClient }) => {
   };
 
   function calculateTimeLeft() {
-    const targetDate = new Date('2025-04-01T00:00:00Z');
+    const targetDate = new Date('2025-05-01T00:00:00Z');
     const now = new Date();
     const difference = targetDate - now;
 
