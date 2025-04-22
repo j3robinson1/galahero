@@ -53,7 +53,7 @@ const CrowdFundingPopup = () => {
         const total = parseFloat(data.Data[0].quantity);
         const locked = data.Data[0].lockedHolds.reduce((acc, hold) => acc + parseFloat(hold.quantity), 0);
         setLockedBalance(locked);
-        setAvailableBalance(total - locked + 137163);
+        setAvailableBalance(137163 + (total - locked));
       }
     } catch (err) {
       console.error('Error fetching balance:', err);
