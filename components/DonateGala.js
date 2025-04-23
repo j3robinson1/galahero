@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Confetti from 'react-confetti';
 
 const DonateGala = ({ walletAddress, metamaskClient }) => {
   const [recipientAddress] = useState('eth|d960c6a3467009fc3d7E8a09e1Ebda89dc1B36B5'); // Set default recipient address
@@ -14,6 +15,7 @@ const DonateGala = ({ walletAddress, metamaskClient }) => {
   const [availableBalance, setAvailableBalance] = useState(0);
   const [lockedBalance, setLockedBalance] = useState(0);
   const [goal, setGoal] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const fetchGoal = async () => {
     try {
@@ -68,6 +70,12 @@ const DonateGala = ({ walletAddress, metamaskClient }) => {
     fetchBalance();
     fetchGoal();
   }, []);
+
+  useEffect(() => {
+    if (!showConfetti && goal > 0 && availableBalance >= goal) {
+      setShowConfetti(true);
+    }
+  }, [availableBalance, goal, showConfetti]);
 
   const isValidTransfer = () => {
     return transferAmount !== null && transferAmount > 0;
@@ -146,7 +154,10 @@ const DonateGala = ({ walletAddress, metamaskClient }) => {
 
   return (
     <div className="transfer-gala-container">
-      <h2>Crowd Funding Initiative</h2>
+      {showConfetti && <Confetti recycle={true} numberOfPieces={50} />}
+      <h2>
+        {availableBalance >= goal ? '🎉 Funding Goal Reached! 🎉' : 'Crowd Funding Initiative'}
+      </h2>
       <div className="fundraising-info">
         <h4 className="popup-title">Current amount funded:</h4>
         <p className="popup-amount">{availableBalance ? Math.ceil(availableBalance).toLocaleString() : '0'} GALA</p>
@@ -157,7 +168,7 @@ const DonateGala = ({ walletAddress, metamaskClient }) => {
             <path d="M10.0002 5H8.2002C7.08009 5 6.51962 5 6.0918 5.21799C5.71547 5.40973 5.40973 5.71547 5.21799 6.0918C5 6.51962 5 7.08009 5 8.2002V15.8002C5 16.9203 5 17.4801 5.21799 17.9079C5.40973 18.2842 5.71547 18.5905 6.0918 18.7822C6.5192 19 7.07899 19 8.19691 19H15.8031C16.921 19 17.48 19 17.9074 18.7822C18.2837 18.5905 18.5905 18.2839 18.7822 17.9076C19 17.4802 19 16.921 19 15.8031V14M20 9V4M20 4H15M20 4L13 11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </a></p>
-        <p className="popup-refund">All donations will be refunded if goal is not met within the funding period</p>
+        <p className="popup-refund">We will be back with a tournament last week of May. Thank you for your support!</p>
         {timeLeft ? (
           <p className="popup-timer">
             {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
