@@ -57,7 +57,7 @@ const DonateGala = ({ walletAddress, metamaskClient }) => {
         const total = parseFloat(data.Data[0].quantity);
         const locked = data.Data[0].lockedHolds.reduce((acc, hold) => acc + parseFloat(hold.quantity), 0);
         setLockedBalance(locked);
-        setAvailableBalance(156163 + (total - locked));
+        setAvailableBalance(150163 + (total - locked));
       }
     } catch (err) {
       console.error('Error fetching balance:', err);
